@@ -78,12 +78,13 @@ async processQuery(query: string) {
     },
   ];
 
-  // const response = await this.anthropic.messages.create({
-  //   model: "claude-sonnet-4-20250514",
-  //   max_tokens: 1000,
-  //   messages,
-  //   tools: this.tools,
-  // });
+
+  /** This is openai invoked */
+ const response = await this.openai.chat.completions.create({
+  model: 'gpt-5.1-mini',                             
+  messages: messages, 
+  tools: this.tools,               
+});
 
   // const finalText = [];
 
