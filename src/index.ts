@@ -86,7 +86,10 @@ async processQuery(query: string) {
   tools: this.tools,               
 });
 
-  // const finalText = [];
+console.log("OpenAI response:", response.choices[0].message);
+
+/** this i keep for showing user related text */
+   const finalText = [];
 
   // for (const content of response.content) {
   //   if (content.type === "text") {
