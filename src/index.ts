@@ -70,12 +70,13 @@ class MCPClient {
  /** this is the method for proccessing the  query and calling the mcp server tool */
 
 async processQuery(query: string) {
-  // const messages: MessageParam[] = [
-  //   {
-  //     role: "user",
-  //     content: query,
-  //   },
-  // ];
+  /** this is the response of openai message*/ 
+  const messages:OpenAI.ChatCompletionMessageParam[]= [
+    {
+      role: "user",
+      content: query,
+    },
+  ];
 
   // const response = await this.anthropic.messages.create({
   //   model: "claude-sonnet-4-20250514",
@@ -164,14 +165,14 @@ async function main() {
   const mcpClient = new MCPClient();
   try {
     await mcpClient.connectToServer(process.argv[2]);
-    // await mcpClient.chatLoop();
+     await mcpClient.chatLoop();
   } catch (e) {
     console.error("Error:", e);
-    // await mcpClient.cleanup();
-    // process.exit(1);
+    await mcpClient.cleanup();
+    process.exit(1);
   } finally {
-    // await mcpClient.cleanup();
-    // process.exit(0);
+    await mcpClient.cleanup();
+    process.exit(0);
   }
 }
 
