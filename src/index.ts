@@ -5,7 +5,6 @@ import readline from "readline/promises";
 import dotenv from "dotenv";
 import OpenAI from "openai";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { Tool } from "openai/resources/responses/responses.js";
 
 dotenv.config();
 
@@ -18,7 +17,7 @@ class MCPClient {
   private mcp: Client;
   private openai: OpenAI;
   private transport: StdioClientTransport | StreamableHTTPClientTransport| null = null;
-  private tools: Tool[] = [];
+  private tools: OpenAI.ChatCompletionTool[] = [];
    
   /**Here i initialized the openai and mcp client instances */
   constructor() {
@@ -52,15 +51,16 @@ class MCPClient {
     this.tools = toolsResult.tools.map((tool) => {
       return {
         type: "function",
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.inputSchema,
-        strict: true,
-      } ;
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.inputSchema,
+        },
+      } as any;
     });
     console.log(
       "Connected to server with tools:",
-      this.tools.filter(tool=>tool.type=="function").map(({ name }) => name)
+      this.tools.map((tool) => (tool.type === "function" ? tool.function.name : "unknown"))
     );
   } catch (e) {
     console.log("Failed to connect to MCP server: ", e);
