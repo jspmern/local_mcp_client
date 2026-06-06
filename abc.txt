@@ -13,3 +13,7 @@ OpenAI response: {"role":"assistant",
 /** when we have normal message */
 
 {"role":"assistant","content":"I don’t have live access to current weather data.\n\nTell me the city (and state/country), and whether you care about now, today’s forecast, or this week, and I’ll explain what the typical weather is like there now of year and how to quickly check the exact current conditions with a weather site/app.","refusal":null,"annotations":[]}
+
+
+/** Mcp tool response */
+Result from tool hello: { content: [ { type: 'text', text: 'hello world' } ] }

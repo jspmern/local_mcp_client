@@ -96,10 +96,28 @@ console.log("OpenAI response:", JSON.stringify(response.choices[0].message));
    finalText.push(content);
  }
  else if(toolCalls.length > 0 && toolCalls) {
+   messages.push(response.choices[0].message);
    for(const tool of toolCalls) {
       if (tool.type !== "function") continue;
       const toolName = tool.function.name;
-      const toolArgs = tool.function.arguments
+      const toolArgs =  JSON.parse(tool.function.arguments)
+
+      /** this is for the showing user  */
+        finalText.push(
+          `[Calling tool ${toolName} with args ${tool.function.arguments}]`
+        );
+     /** Note 👉  insted of calling the tool manually we have to call mcp server tool*/
+      const result = await this.mcp.callTool({
+          name: toolName,
+          arguments: toolArgs,
+        });
+
+          messages.push({
+          role: "tool",
+          tool_call_id: tool.id,
+          content: JSON.stringify(result.content),
+        });
+
  }
 
 
@@ -139,7 +157,7 @@ console.log("OpenAI response:", JSON.stringify(response.choices[0].message));
   return query.toString()
 }
 
-
+}
 
 
   /** this is the method for getting input form terminal */
@@ -170,8 +188,6 @@ async cleanup() {
   await this.mcp.close();
 }
 }
-
-
 async function main() {
   if (process.argv.length < 3) {
     console.log("Usage: node index.ts <path_to_server_script>");
