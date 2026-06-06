@@ -1,0 +1,19 @@
+/** when we have tool call */
+OpenAI response: {
+  role: 'assistant',
+  content: null,
+  tool_calls: [
+    {
+      id: 'call_VUYdGC4UuP0owe44Vu3ea4cO',
+      type: 'function',
+      function: [Object]
+    }
+  ],
+  refusal: null,
+  annotations: []
+}
+
+
+/** when we have normal message */
+
+{"role":"assistant","content":"I don’t have live access to current weather data.\n\nTell me the city (and state/country), and whether you care about now, today’s forecast, or this week, and I’ll explain what the typical weather is like there now of year and how to quickly check the exact current conditions with a weather site/app.","refusal":null,"annotations":[]}

@@ -81,12 +81,13 @@ async processQuery(query: string) {
 
   /** This is openai invoked */
  const response = await this.openai.chat.completions.create({
-  model: 'gpt-5.1-mini',                             
+  model:"gpt-5.1-2025-11-13",                             
   messages: messages, 
   tools: this.tools,               
 });
 
-console.log("OpenAI response:", response.choices[0].message);
+console.log("OpenAI response:", JSON.stringify(response.choices[0].message));
+ 
 
 /** this i keep for showing user related text */
    const finalText = [];
