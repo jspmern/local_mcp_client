@@ -86,7 +86,7 @@ async processQuery(query: string) {
   tools: this.tools,               
 });
 
-console.log("OpenAI response:", JSON.stringify(response.choices[0].message));
+// console.log("OpenAI response:", response.choices[0].message);
 
    const finalText = [];
 /** this i keep for showing user related text */
@@ -118,44 +118,20 @@ console.log("OpenAI response:", JSON.stringify(response.choices[0].message));
           content: JSON.stringify(result.content),
         });
 
- }
-
-
-  // for (const content of response.content) {
-  //   if (content.type === "text") {
-  //     finalText.push(content.text);
-  //   } else if (content.type === "tool_use") {
-  //     const toolName = content.name;
-  //     const toolArgs = content.input as { [x: string]: unknown } | undefined;
-
-  //     const result = await this.mcp.callTool({
-  //       name: toolName,
-  //       arguments: toolArgs,
-  //     });
-  //     finalText.push(
-  //       `[Calling tool ${toolName} with args ${JSON.stringify(toolArgs)}]`
-  //     );
-
-  //     messages.push({
-  //       role: "user",
-  //       content: result.content as string,
-  //     });
-
-  //     const response = await this.anthropic.messages.create({
-  //       model: "claude-sonnet-4-20250514",
-  //       max_tokens: 1000,
-  //       messages,
-  //     });
-
-  //     finalText.push(
-  //       response.content[0].type === "text" ? response.content[0].text : ""
-  //     );
-  //   }
-  // }
-
-  // return finalText.join("\n");
-  return query.toString()
+   } 
 }
+ const followupResponse =
+        await this.openai.chat.completions.create({
+          model: "gpt-5.1",
+          messages,
+        });
+
+      if (followupResponse.choices[0].message.content) {
+        finalText.push(
+          followupResponse.choices[0].message.content
+        );
+      }
+       return finalText.join("\n"); 
 
 }
 
