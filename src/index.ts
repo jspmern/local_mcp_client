@@ -87,10 +87,21 @@ async processQuery(query: string) {
 });
 
 console.log("OpenAI response:", JSON.stringify(response.choices[0].message));
- 
 
-/** this i keep for showing user related text */
    const finalText = [];
+/** this i keep for showing user related text */
+ const content = response.choices[0].message.content;
+ const toolCalls = response.choices[0].message.tool_calls || [];
+ if(content) {
+   finalText.push(content);
+ }
+ else if(toolCalls.length > 0 && toolCalls) {
+   for(const tool of toolCalls) {
+      if (tool.type !== "function") continue;
+      const toolName = tool.function.name;
+      const toolArgs = tool.function.arguments
+ }
+
 
   // for (const content of response.content) {
   //   if (content.type === "text") {

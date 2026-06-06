@@ -1,17 +1,13 @@
 /** when we have tool call */
-OpenAI response: {
-  role: 'assistant',
-  content: null,
-  tool_calls: [
-    {
-      id: 'call_VUYdGC4UuP0owe44Vu3ea4cO',
-      type: 'function',
-      function: [Object]
+OpenAI response: {"role":"assistant",
+"content":null,
+"tool_calls":[
+    {"id":"call_al59DLaKoIYeRgDcHvHl55xa",
+    "type":"function",
+    "function":{"name":"hello",
+    "arguments":"{}"}
     }
-  ],
-  refusal: null,
-  annotations: []
-}
+    ],"refusal":null,"annotations":[]}
 
 
 /** when we have normal message */
