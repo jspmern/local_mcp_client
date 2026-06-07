@@ -88,6 +88,38 @@ this.tools = toolsResult.tools as unknown as Tool[];
 - The entry point is [src/index.ts](src/index.ts) — start here to see how `tools` are consumed.
 - The compiled output is at `build/index.js`.
 
+## Resources
+
+- The client discovers MCP resources by calling `mcp.listResources()` after connecting to a local MCP server.
+- Discovered resources are exposed to the assistant via a generic `read_resource` tool that accepts a single `uri` string parameter.
+- Example resource URIs (shown in `src/index.ts`):
+
+  - `company://policy`
+  - `db://schema`
+  - `student://<id>` (e.g. `student://1`)
+  - `image://logo`
+
+- How it works (high-level):
+  1. The client connects to a server script (JS or Python) using stdio transport.
+  2. It calls `mcp.listResources()` to retrieve available resources and their metadata.
+  3. It registers a tool named `read_resource` that the assistant can call with a `uri`.
+  4. When `read_resource` is invoked, the client calls `mcp.readResource({ uri })` and forwards the result back to the assistant.
+
+- Example: run the client and connect to a local MCP server script
+
+```bash
+# build then run (if using compiled output)
+npm run build
+node build/index.js path/to/server_script.js
+
+# or run directly in TypeScript during development
+npx ts-node src/index.ts path/to/server_script.js
+```
+
+Replace `path/to/server_script.js` with the path to your local MCP server script (or `.py` script). The client supports both `.js` and `.py` server scripts and will choose `node` or `python` accordingly.
+
+See [src/index.ts](src/index.ts) for the concrete implementation and the resource examples logged during startup.
+
 ## Tests
 - No tests are included by default. To add tests, install a test runner (e.g., Jest) and add scripts to `package.json`.
 
