@@ -18,6 +18,7 @@ class MCPClient {
   private openai: OpenAI;
   private transport: StdioClientTransport | StreamableHTTPClientTransport| null = null;
   private tools: OpenAI.ChatCompletionTool[] = [];
+  private resources: any[] = [];
    
   /**Here i initialized the openai and mcp client instances */
   constructor() {
@@ -58,6 +59,76 @@ class MCPClient {
         },
       } as any;
     });
+
+    // ----------------------------------
+    // MCP RESOURCES
+    // ----------------------------------
+
+    const resourcesResult =
+      await this.mcp.listResources();
+
+    this.resources =
+      resourcesResult.resources;
+
+    console.log(
+      "Resources Found:"
+    );
+
+    console.log(
+      this.resources
+    );
+       // ----------------------------------
+    // GENERIC RESOURCE TOOL
+    // ----------------------------------
+
+    const resourceNames =
+      this.resources
+        .map(
+          (r: any) => r.name
+        )
+        .join(", ");
+
+    this.tools.push({
+      type: "function",
+      function: {
+        name: "read_resource",
+        description: `
+Read MCP resources.
+
+Available Resources:
+${resourceNames}
+
+Examples:
+
+company://policy
+
+db://schema
+
+student://1
+
+student://5
+
+image://logo
+
+image://online-logo
+`,
+        parameters: {
+          type: "object",
+          properties: {
+            uri: {
+              type: "string",
+              description:
+                "Full MCP resource URI",
+            },
+          },
+          required: ["uri"],
+        },
+      },
+    } as any);
+
+    console.log(
+      "Connected to server with tools:"
+    );
     console.log(
       "Connected to server with tools:",
       this.tools.map((tool) => (tool.type === "function" ? tool.function.name : "unknown"))
@@ -69,70 +140,148 @@ class MCPClient {
 }
  /** this is the method for proccessing the  query and calling the mcp server tool */
 
-async processQuery(query: string) {
-  /** this is the response of openai message*/ 
-  const messages:OpenAI.ChatCompletionMessageParam[]= [
-    {
-      role: "user",
-      content: query,
-    },
-  ];
+async processQuery(
+  query: string
+) {
 
+  const messages:
+    OpenAI.ChatCompletionMessageParam[] =
+    [
+      {
+        role: "user",
+        content: query,
+      },
+    ];
 
-  /** This is openai invoked */
- const response = await this.openai.chat.completions.create({
-  model:"gpt-5.1-2025-11-13",                             
-  messages: messages, 
-  tools: this.tools,               
-});
+  const response =
+    await this.openai.chat.completions.create({
+      model: "gpt-5.1",
+      messages,
+      tools: this.tools,
+    });
 
-// console.log("OpenAI response:", response.choices[0].message);
+  const finalText: string[] =
+    [];
 
-   const finalText = [];
-/** this i keep for showing user related text */
- const content = response.choices[0].message.content;
- const toolCalls = response.choices[0].message.tool_calls || [];
- if(content) {
-   finalText.push(content);
- }
- else if(toolCalls.length > 0 && toolCalls) {
-   messages.push(response.choices[0].message);
-   for(const tool of toolCalls) {
-      if (tool.type !== "function") continue;
-      const toolName = tool.function.name;
-      const toolArgs =  JSON.parse(tool.function.arguments)
+  const assistantMessage =
+    response.choices[0].message;
 
-      /** this is for the showing user  */
-        finalText.push(
-          `[Calling tool ${toolName} with args ${tool.function.arguments}]`
-        );
-     /** Note 👉  insted of calling the tool manually we have to call mcp server tool*/
-      const result = await this.mcp.callTool({
-          name: toolName,
-          arguments: toolArgs,
-        });
+  if (
+    assistantMessage.content
+  ) {
+    finalText.push(
+      assistantMessage.content
+    );
+  }
 
-          messages.push({
-          role: "tool",
-          tool_call_id: tool.id,
-          content: JSON.stringify(result.content),
-        });
+  const toolCalls =
+    assistantMessage.tool_calls ||
+    [];
 
-   } 
-}
- const followupResponse =
-        await this.openai.chat.completions.create({
-          model: "gpt-5.1",
-          messages,
-        });
+  if (
+    toolCalls.length > 0
+  ) {
 
-      if (followupResponse.choices[0].message.content) {
-        finalText.push(
-          followupResponse.choices[0].message.content
-        );
+    messages.push(
+      assistantMessage
+    );
+
+    for (const tool of toolCalls) {
+
+      if (
+        tool.type !==
+        "function"
+      ) {
+        continue;
       }
-       return finalText.join("\n"); 
 
+      const toolName =
+        tool.function.name;
+
+      const toolArgs =
+        JSON.parse(
+          tool.function.arguments
+        );
+
+      let result: any;
+
+      // ----------------------------------
+      // RESOURCE HANDLING
+      // ----------------------------------
+
+      if (
+        toolName ===
+        "read_resource"
+      ) {
+
+        console.log(
+          `Reading Resource => ${toolArgs.uri}`
+        );
+
+        result =
+          await this.mcp.readResource({
+            uri:
+              toolArgs.uri,
+          });
+
+      }
+
+      // ----------------------------------
+      // NORMAL MCP TOOL
+      // ----------------------------------
+
+      else {
+
+        console.log(
+          `Calling Tool => ${toolName}`
+        );
+
+        result =
+          await this.mcp.callTool({
+            name:
+              toolName,
+            arguments:
+              toolArgs,
+          });
+
+      }
+
+      messages.push({
+        role: "tool",
+        tool_call_id:
+          tool.id,
+        content:
+          JSON.stringify(
+            result,
+            null,
+            2
+          ),
+      });
+    }
+
+    const followupResponse =
+      await this.openai.chat.completions.create({
+        model: "gpt-5.1",
+        messages,
+      });
+
+    if (
+      followupResponse
+        .choices[0]
+        .message.content
+    ) {
+
+      finalText.push(
+        followupResponse
+          .choices[0]
+          .message.content
+      );
+    }
+  }
+
+  return finalText.join(
+    "\n"
+  );
 }
 
 
